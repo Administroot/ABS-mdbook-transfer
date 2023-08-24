@@ -1,0 +1,10 @@
+[book]
+authors = ["administroot"]
+language = "zh"
+description = "『Advanced Bash-Scripting Guide in Chinese, also in Mdbook』"
+multilingual = true
+src = "src"
+title = "『Advanced Bash-Scripting Guide in Chinese（REVISION 10）』"
+
+[output.html]
+mathjax-support = true
