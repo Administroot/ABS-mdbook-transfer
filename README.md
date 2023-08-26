@@ -3,6 +3,7 @@
 >  <em>开发中，敬请期待</em>
 
 ---
+[![MIT License](https://img.shields.io/badge/License-MIT-blue.svg)](./LICENSE)
 
 **ABS-Mdbook-Converter**是基于[Mdbook](https://rust-lang.github.io/mdBook/)（源代码仓库部署方式为[Gitbook](https://www.gitbook.com/)）的[《Bash脚本进阶指南》第十次修订本中文版](https://github.com/LinuxStory/Advanced-Bash-Scripting-Guide-in-Chinese)（简称ABS）的<em>**本地部署**</em>工具。
 
@@ -10,9 +11,10 @@
 
 ## 快速开始
 
-### 一、准备Rust环境
+### 一、准备环境
 
-由于Mdbook需要Rust编译环境，请前往[Rust官网](https://www.rust-lang.org/)下载并安装。
+由于Mdbook需要**Rust**编译环境，请前往[Rust官网](https://www.rust-lang.org/)下载并安装。
+本软件需要[Python3.5](https://www.python.org/downloads/)以上解释器
 
 ### 二、克隆本项目
 
