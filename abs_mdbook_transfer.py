@@ -3,12 +3,17 @@
 @Author: Administroot <1474668090@qq.com>
 @Repository: https://gitee.com/administroot/ABS-mdbook-transfer OR
              https://github.com/Administroot/ABS-mdbook-transfer
-@Date: 2023/8/26
+@Date: 2023/8/27
 '''
 
 import subprocess
 import os
 import shutil
+
+SUBMODULE = "Advanced-Bash-Scripting-Guide-in-Chinese/"
+PATH_EXCHANGE = {SUBMODULE+"source/": "src",
+                 SUBMODULE + "SUMMARY.md": "src/SUMMARY.md"}
+MDPATH = os.path.abspath('src/') + '\\'
 
 
 # 格式化输出
@@ -42,7 +47,7 @@ def install_mdbook() -> None:
         format_print("ERROR", "未知错误，程序退出")
 
 
-# 检查是否存在submodule
+# 检查是否存在SUBMODULE
 def check_existence(path: list) -> bool:
     format_print("INFO", "检查ABS环境")
     for rel_path in path:
@@ -75,33 +80,67 @@ def cp_files(trans: dict) -> None:
                 os.remove(dst)
                 shutil.copyfile(src, dst)
 
-# 更改SUMMARY.md索引
-def update_summary() -> None:
-    format_print("INFO", "修改SUMMARY.md索引格式")
-    content = str()
-    try:
-        stage = "读取"
-        with open("src/SUMMARY.md", "r", encoding='utf-8') as fp:
-            content = fp.read()
-            content = content.replace("source/", "")
 
-        stage = "写入"
-        with open("src/SUMMARY.md", "w", encoding='utf-8') as fp:
-            fp.write(content)
-    except Exception:
-        format_print("ERROR", f"无法{stage}SUMMARY.md。程序终止")
-        exit(62)
+class mdfile:
+    def __init__(self, file_path) -> None:
+        self.file_path = file_path
+        self.file_ctx = self.read(file_path)
 
-# TODO: 转换Markdown格式
+    def read(self, path: str) -> str:
+        try:
+            with open(path, "r", encoding='utf-8') as fp:
+                return fp.read()
+        except Exception:
+            format_print("ERROR", f"无法读取{path}。程序终止")
+            exit(62)
+ 
+    def write(self, path: str) -> None:
+        try:
+            with open(path, "w", encoding='utf-8') as fp:
+                fp.write(self.file_ctx)
+        except Exception:
+            format_print("ERROR", f"无法写入{path}。程序终止")
+            exit(63)
+
+    def global_replace(self, origin_words: str, replaced_words: str) -> None:
+        aft_ctx = self.file_ctx.replace(origin_words, replaced_words)
+        if aft_ctx != self.file_ctx:
+            format_print("INFO", f"将文件{self.file_path}中的 \"{origin_words}\" 更改为 \"{replaced_words}\"")
+        self.file_ctx = aft_ctx
+        # print("file_ctx= ", self.file_ctx)
+        self.write(self.file_path)
+
+
+# 更改SUMMARY.md索引格式
+def update_summary(summary: mdfile) -> None:
+    format_print("INFO", "正在修改SUMMARY.md索引格式")
+    summary.global_replace(origin_words="source/", replaced_words="")
+
+
+# 格式转换
+def transform(path: str) -> bool:
+    files = list()
+    for item in os.scandir(path):
+        if item.is_file():
+            files.append(item.path)
+        else:
+            transform(item)
+
+    for file in files:
+        # 创建对象
+        new_file = mdfile(file)
+
+        # 处理对象
+        # TODO: 转换hint style
+
+        # 删除对象
+        del new_file
 
 
 # Main function
 if __name__ == '__main__':
     cmd = "rustc"
     arg = "--version"
-    submodule = "Advanced-Bash-Scripting-Guide-in-Chinese/"
-    change_paths = {submodule+"source/": "src",
-                    submodule + "SUMMARY.md": "src/SUMMARY.md"}
 
     format_print("INFO", "程序正常启动")
 
@@ -111,16 +150,22 @@ if __name__ == '__main__':
 
     install_mdbook()
 
-    essential_files = change_paths.keys()
+    essential_files = PATH_EXCHANGE.keys()
 
     if not check_existence(essential_files):
-        format_print("ERROR", f"缺少 “{submodule}” 相关文件，请检查！")
+        format_print("ERROR", f"缺少 “{SUBMODULE}” 相关文件，请检查！")
         exit(61)
 
-    cp_files(change_paths)
+    cp_files(PATH_EXCHANGE)
 
     # 释放内存
-    del change_paths
+    del PATH_EXCHANGE
     del essential_files
 
-    update_summary()
+    format_print("INFO", "格式转换中......")
+
+    sum_file = mdfile(MDPATH + "SUMMARY.md")
+    update_summary(sum_file)
+    del sum_file
+
+    transform(MDPATH)
