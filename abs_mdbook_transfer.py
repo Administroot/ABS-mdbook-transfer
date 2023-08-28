@@ -3,17 +3,18 @@
 @Author: Administroot <1474668090@qq.com>
 @Repository: https://gitee.com/administroot/ABS-mdbook-transfer OR
              https://github.com/Administroot/ABS-mdbook-transfer
-@Date: 2023/8/27
+@Date: 2023/8/28
 '''
 
 import subprocess
 import os
 import shutil
+import re
 
 SUBMODULE = "Advanced-Bash-Scripting-Guide-in-Chinese/"
 PATH_EXCHANGE = {SUBMODULE+"source/": "src",
                  SUBMODULE + "SUMMARY.md": "src/SUMMARY.md"}
-MDPATH = os.path.abspath('src/') + '\\'
+MDPATH = os.path.abspath('src/') + '/'
 
 
 # 格式化输出
@@ -105,10 +106,63 @@ class mdfile:
     def global_replace(self, origin_words: str, replaced_words: str) -> None:
         aft_ctx = self.file_ctx.replace(origin_words, replaced_words)
         if aft_ctx != self.file_ctx:
-            format_print("INFO", f"将文件{self.file_path}中的 \"{origin_words}\" 更改为 \"{replaced_words}\"")
+            format_print("INFO", f"『{self.file_path}』:  \"{origin_words}\" --> \"{replaced_words}\"")
         self.file_ctx = aft_ctx
         # print("file_ctx= ", self.file_ctx)
         self.write(self.file_path)
+
+    def partial_replacement(self) -> None:
+        # 内容转为切片
+        line_ls = self.file_ctx.split('\n')
+        
+        # 遍历，找到关键词并触发策略
+        new_ls = list()
+        new_line = str()
+        res = tuple()
+        hint_flag = -1
+        for elem in line_ls:
+            # 遇到hint style 就变为0并开始递增； 遇到endhint就重新变成-1
+            # 转换hint style
+            res = self.hint_trans(hint_flag, elem)
+            hint_flag = res[0]
+            new_line = res[1]
+
+            if hint_flag >= 0:
+                hint_flag += 1
+            
+            # TODO: 转换raw
+
+            if new_line == "":
+                continue
+            new_ls.append(new_line)
+
+
+        # 重新写入文件
+        self.file_ctx = "\n".join(new_ls)
+        self.write(self.file_path)
+
+    # 转换hint style
+    def hint_trans(self, flag: int, line: str) -> (int, str):
+        # TODO: output logs <FILE LINENO>
+        if re.match(r"{% hint style=\"(.*)\" %}", line):
+            line = ""
+            flag = 0
+        elif re.match(r"{% endhint %}", line):
+            line = ""
+            return (-1, '\n')
+        
+        # 下一行
+        if flag == 1:
+            if line != "":
+                line = "\n" + "> ![note](https://tldp.org/LDP/abs/images/tip.gif)" + "\n> \n> " + line
+            else:
+                line = "> ![note](https://tldp.org/LDP/abs/images/tip.gif)" + line
+        elif flag > 1:
+            # 其他所有内容均添加 "> "
+            line = "> " + line
+        
+        return (flag, line)
+
 
 
 # 更改SUMMARY.md索引格式
@@ -130,8 +184,8 @@ def transform(path: str) -> bool:
         # 创建对象
         new_file = mdfile(file)
 
-        # 处理对象
-        # TODO: 转换hint style
+        # TODO: 处理对象
+        new_file.partial_replacement()
 
         # 删除对象
         del new_file
