@@ -3,13 +3,14 @@
 @Author: Administroot <1474668090@qq.com>
 @Repository: https://gitee.com/administroot/ABS-mdbook-transfer OR
              https://github.com/Administroot/ABS-mdbook-transfer
-@Date: 2023/8/28
+@Date: 2023/8/29
 '''
 
 import subprocess
 import os
 import shutil
 import re
+import mdformat
 
 SUBMODULE = "Advanced-Bash-Scripting-Guide-in-Chinese/"
 PATH_EXCHANGE = {SUBMODULE+"source/": "src",
@@ -94,7 +95,7 @@ class mdfile:
         except Exception:
             format_print("ERROR", f"无法读取{path}。程序终止")
             exit(62)
- 
+
     def write(self, path: str) -> None:
         try:
             with open(path, "w", encoding='utf-8') as fp:
@@ -114,26 +115,29 @@ class mdfile:
     def partial_replacement(self) -> None:
         # 内容转为切片
         line_ls = self.file_ctx.split('\n')
-        
+
         # 遍历，找到关键词并触发策略
         new_ls = list()
         new_line = str()
         res = tuple()
         hint_flag = -1
+        line_num = 0
         for elem in line_ls:
+            line_num += 1
             # 遇到hint style 就变为0并开始递增； 遇到endhint就重新变成-1
             # 转换hint style
-            res = self.hint_trans(hint_flag, elem)
+            res = self.hint_trans(hint_flag, elem, line_num)
             hint_flag = res[0]
             new_line = res[1]
 
             if hint_flag >= 0:
                 hint_flag += 1
-            
-            # TODO: 转换raw
 
             if new_line == "":
                 continue
+
+            # TODO: 增加代码块shell标签
+
             new_ls.append(new_line)
 
 
@@ -142,12 +146,13 @@ class mdfile:
         self.write(self.file_path)
 
     # 转换hint style
-    def hint_trans(self, flag: int, line: str) -> (int, str):
-        # TODO: output logs <FILE LINENO>
+    def hint_trans(self, flag: int, line: str, num: int) -> (int, str):
         if re.match(r"{% hint style=\"(.*)\" %}", line):
+            format_print("INFO", f'『{self.file_path}』, line {num}: trigger \"hint style\" translation')
             line = ""
             flag = 0
         elif re.match(r"{% endhint %}", line):
+            format_print("INFO", f'『{self.file_path}』, line {num}: \"hint style\" translation ends')
             line = ""
             return (-1, '\n')
         
@@ -164,28 +169,42 @@ class mdfile:
         return (flag, line)
 
 
-
 # 更改SUMMARY.md索引格式
 def update_summary(summary: mdfile) -> None:
     format_print("INFO", "正在修改SUMMARY.md索引格式")
     summary.global_replace(origin_words="source/", replaced_words="")
 
 
+# 取消rawhint
+def del_rawhint(rawfile: mdfile) -> None:
+    if rawfile.file_ctx.find("{% raw %}") != -1:
+        format_print("INFO", f"『{rawfile.file_path}』: 正在取消rawhint")
+        rawfile.global_replace(origin_words="{% raw %}", replaced_words="")
+        rawfile.global_replace(origin_words="{% endraw %}", replaced_words="")
+
+
 # 格式转换
-def transform(path: str) -> bool:
-    files = list()
+def transform(path: str, files: list) -> bool:
     for item in os.scandir(path):
         if item.is_file():
             files.append(item.path)
         else:
-            transform(item)
-
+            transform(item, files)
+    format_print("INFO", "正在进行Markdown格式处理")
+    # print("files=", files)
     for file in files:
         # 创建对象
         new_file = mdfile(file)
 
+        # 取消rawhint
+        del_rawhint(new_file)
+
         # TODO: 处理对象
         new_file.partial_replacement()
+
+        # 格式化Markdown文件
+        format_print("INFO", f"正在格式化 『{new_file.file_path}』")
+        mdformat.file(new_file.file_path)
 
         # 删除对象
         del new_file
@@ -222,4 +241,4 @@ if __name__ == '__main__':
     update_summary(sum_file)
     del sum_file
 
-    transform(MDPATH)
+    transform(MDPATH, list())
