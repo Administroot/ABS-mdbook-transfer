@@ -16,20 +16,18 @@
 由于Mdbook需要**Rust**编译环境，请前往[Rust官网](https://www.rust-lang.org/)下载并安装。
 本软件需要[Python3.5](https://www.python.org/downloads/)以上解释器
 
-### 二、克隆本项目
-
 ```shell
 git clone https://github.com/Administroot/ABS-mdbook-transfer.git ABS-mdbook-transfer --recursive
+cd ABS-mdbook-transfer && pip install -r requirements.txt
 ```
 
-### 三、启动ABS-Mdbook-Converter
+### 二、启动ABS-Mdbook-Converter
 
 ```shell
-cd ABS-mdbook-transfer
-尚在开发中，敬请期待！！
+python abs_mdbook_transfer.py
 ```
 
-### 四、启动Mdbook
+### 三、启动Mdbook
 
 在当前目录执行
 
