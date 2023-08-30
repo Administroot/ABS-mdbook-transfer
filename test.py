@@ -1,7 +1,7 @@
 import unittest
 import abs_mdbook_transfer
 
-TEST_SUM_CTX = "\n## 测试\n* [test-hint](test/transfer-hint.md)"
+TEST_SUM_CTX = "\n## 测试\n- [test-hint](test/transfer-hint.md)\n- [test-codeblock](test/add-codeblock-bash.md)"
 
 
 class Test_transfer(unittest.TestCase):
@@ -39,8 +39,13 @@ class Test_transfer(unittest.TestCase):
     # def test_transform(self):
     #     self.assertLogs(abs_mdbook_transfer.transform(abs_mdbook_transfer.MDPATH))
 
-    def test_partial_replacement(self):
+    def test_hint_trans(self):
         self.mdfile_class = abs_mdbook_transfer.mdfile(abs_mdbook_transfer.MDPATH + "test/transfer-hint.md")
+        abs_mdbook_transfer.format_print("INFO", "TESTING FILE: " + self.mdfile_class.file_path)
+        self.assertLogs(self.mdfile_class.partial_replacement())
+
+    def test_add_codeblock_bash(self):
+        self.mdfile_class = abs_mdbook_transfer.mdfile(abs_mdbook_transfer.MDPATH + "test/add-codeblock-bash.md")
         abs_mdbook_transfer.format_print("INFO", "TESTING FILE: " + self.mdfile_class.file_path)
         self.assertLogs(self.mdfile_class.partial_replacement())
 
