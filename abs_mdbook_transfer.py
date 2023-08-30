@@ -1,9 +1,10 @@
 #!/bin/env python3
 '''
+@name: ABS MDBOOK TRANSFER
 @Author: Administroot <1474668090@qq.com>
 @Repository: https://gitee.com/administroot/ABS-mdbook-transfer OR
              https://github.com/Administroot/ABS-mdbook-transfer
-@Date: 2023/8/29
+@Date: 2023/8/30
 '''
 
 import subprocess
@@ -122,6 +123,7 @@ class mdfile:
         res = tuple()
         hint_flag = -1
         line_num = 0
+        shell_flag = False
         for elem in line_ls:
             line_num += 1
             # 遇到hint style 就变为0并开始递增； 遇到endhint就重新变成-1
@@ -136,7 +138,10 @@ class mdfile:
             if new_line == "":
                 continue
 
-            # TODO: 增加代码块shell标签
+            # 增加代码块bash标签进行代码渲染
+            res = self.add_codeblock_bash(new_line, shell_flag, line_num)
+            shell_flag = res[0]
+            new_line = res[1]
 
             new_ls.append(new_line)
 
@@ -167,6 +172,26 @@ class mdfile:
             line = "> " + line
         
         return (flag, line)
+
+    # 添加代码块shell标签
+    def add_codeblock_bash(self, line: str, tag: bool, num: int) -> (bool, str):
+        # print("tag=", tag)
+        if line.find("```") != -1:
+            tag = not tag
+        
+            # 如果flag为True，却没有bash则加上
+            if tag and line.find("shell") == -1 and line.find("bash") == -1:
+                line = line + "bash"
+                # print("tag is true:", line)
+                format_print("INFO", f"『{self.file_path}』, line {num}: add code block bash flag")
+            # print("tag is false:", line)
+
+            # 如果是shell，则改成bash
+            if tag and line.find("shell") != -1:
+                line = line.replace("shell", "bash")
+                format_print("INFO", f"『{self.file_path}』, line {num}: code block \'shell\' --> \'bash\'")
+
+        return (tag, line)
 
 
 # 更改SUMMARY.md索引格式
