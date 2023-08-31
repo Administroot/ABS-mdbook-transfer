@@ -4,7 +4,7 @@
 @Author: Administroot <1474668090@qq.com>
 @Repository: https://gitee.com/administroot/ABS-mdbook-transfer OR
              https://github.com/Administroot/ABS-mdbook-transfer
-@Date: 2023/8/30
+@Date: 2023/8/31
 '''
 
 import subprocess
@@ -82,6 +82,34 @@ def cp_files(trans: dict) -> None:
                 format_print("WARN", dst + "文件已存在，将覆盖。")
                 os.remove(dst)
                 shutil.copyfile(src, dst)
+
+
+# 遍历目录下文件
+def get_all_files(path: str, files: list) -> list:
+    for item in os.scandir(path):
+        if item.is_file():
+            files.append(item.path)
+        else:
+            get_all_files(item, files)
+    return files
+
+
+# 部分文件格式出入较大，进行手动修改
+def replace_files(src: str, dst: str) -> None:
+    for root, dirs, files in os.walk(dst):
+        for filename in files:
+            src_filepath = os.path.join(src, filename)
+            if os.path.exists(src_filepath):
+                dst_filepath = os.path.join(root, filename)
+                try:
+                    shutil.copyfile(src_filepath, dst_filepath)
+                    format_print("INFO", f"file 『{src_filepath}』 --> file『{dst_filepath}』")
+                except Exception:
+                    format_print("ERROR", "未知错误，程序退出！")
+                    exit(64)
+            else:
+                format_print("ERROR", f"file 『{src_filepath}』 -x-> dir 『{dst}』")
+                exit(65)
 
 
 class mdfile:
@@ -210,11 +238,7 @@ def del_rawhint(rawfile: mdfile) -> None:
 
 # 格式转换
 def transform(path: str, files: list) -> bool:
-    for item in os.scandir(path):
-        if item.is_file():
-            files.append(item.path)
-        else:
-            transform(item, files)
+    files = get_all_files(path, files)
     format_print("INFO", "正在进行Markdown格式处理")
     # print("files=", files)
     for file in files:
@@ -224,7 +248,7 @@ def transform(path: str, files: list) -> bool:
         # 取消rawhint
         del_rawhint(new_file)
 
-        # TODO: 处理对象
+        # 对mdfile对象进行处理
         new_file.partial_replacement()
 
         # 格式化Markdown文件
@@ -254,7 +278,10 @@ if __name__ == '__main__':
         format_print("ERROR", f"缺少 “{SUBMODULE}” 相关文件，请检查！")
         exit(61)
 
+    # 复制必要文件
     cp_files(PATH_EXCHANGE)
+    # 替换一些需手动处理的文件
+    replace_files(src="assets", dst="src")
 
     # 释放内存
     del PATH_EXCHANGE
