@@ -6,6 +6,9 @@ src/
 .vscode/
 .idea/
 
+# TMP SETTINGS
+assets/
+
 # Python ignore
 # Byte-compiled / optimized / DLL files
 __pycache__/
