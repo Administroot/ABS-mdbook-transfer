@@ -49,6 +49,12 @@ class Test_transfer(unittest.TestCase):
         abs_mdbook_transfer.format_print("INFO", "TESTING FILE: " + self.mdfile_class.file_path)
         self.assertLogs(self.mdfile_class.partial_replacement())
 
+    def test_get_all_files(self):
+        self.assertListEqual(abs_mdbook_transfer.get_all_files("test", list()), ["test\\add-codeblock-bash.md", "test\\transfer-hint.md"])
+
+    def test_replace_files(self):
+        abs_mdbook_transfer.format_print("INFO", "TESTING replace_files")
+        self.assertLogs(abs_mdbook_transfer.replace_files("assets", "src"))
 
 if __name__ == '__main__':
     unittest.main()
