@@ -294,3 +294,7 @@ if __name__ == '__main__':
     del sum_file
 
     transform(MDPATH, list())
+
+    format_print("INFO", "DONE!!")
+
+    exit(0)
