@@ -108,8 +108,7 @@ def replace_files(src: str, dst: str) -> None:
                     format_print("ERROR", "未知错误，程序退出！")
                     exit(64)
             else:
-                format_print("ERROR", f"file 『{src_filepath}』 -x-> dir 『{dst}』")
-                exit(65)
+                format_print("INFO", f"file 『{src_filepath}』不存在，不进行操作。")
 
 
 class mdfile:
